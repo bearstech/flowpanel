@@ -1,4 +1,5 @@
 import asyncio
+import asyncio_redis
 from aiohttp import web, MsgType
 
 @asyncio.coroutine
@@ -13,16 +14,22 @@ def websocket_handler(request):
     ws.start(request)
 
     ws.send_str("START")
+    connection = yield from asyncio_redis.Connection.create(host='127.0.0.1', port=6379)
+    pong = yield from connection.ping()
+    print(pong)
+
     while True:
         msg = yield from ws.receive()
 
         if msg.tp == MsgType.text:
             if msg.data == 'close':
                 yield from ws.close()
+                yield from connection.close()
             else:
                 ws.send_str(msg.data + '/answer')
         elif msg.tp == MsgType.close:
             print('websocket connection closed')
+            yield from connection.close()
         elif msg.tp == MsgType.error:
             print('ws connection closed with exception %s',
                   ws.exception())
