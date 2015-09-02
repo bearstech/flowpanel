@@ -1,0 +1,4 @@
+aiohttp
+cchardet
+asyncio_redis
+gunicorn
