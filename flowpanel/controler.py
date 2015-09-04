@@ -30,6 +30,7 @@ def event(request):
 
 @asyncio.coroutine
 def websocket_handler(request):
+    global USER_KEY
 
     if USER_KEY not in request:
         raise web.HTTPForbidden
