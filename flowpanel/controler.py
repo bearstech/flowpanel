@@ -1,9 +1,12 @@
 import asyncio
+import json
+
 import asyncio_redis
 from aiohttp import web, MsgType
 from aiohttp.websocket import Message
 from asyncio_redis.replies import PubSubReply
-import json
+
+from .auth import USER_KEY
 
 
 @asyncio.coroutine
