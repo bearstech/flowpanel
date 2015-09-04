@@ -1,16 +1,7 @@
 import asyncio
-from aiohttp.web import Application
 
+from flowpanel.app import app
 
-from flowpanel.auth import auth_factory
-from flowpanel.controler import home, websocket_handler, event
-
-
-
-app = Application(middlewares=[auth_factory])
-app.router.add_route('GET', '/', home)
-app.router.add_route('GET', '/chaussette', websocket_handler)
-app.router.add_route('PUT', '/event/{user}', event)
 
 loop = asyncio.get_event_loop()
 handler = app.make_handler()
