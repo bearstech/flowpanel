@@ -21,7 +21,11 @@ def event(request):
         raise web.HTTPBadRequest
     connection = yield from asyncio_redis.Connection.create(host='127.0.0.1',
                                                             port=6379)
-    yield from connection.publish('/events/%s' % user, request.content)
+    body = yield from request.content.read()
+    yield from connection.publish('/events/%s' % user,
+                                  str(body, encoding='utf-8'))
+
+    return web.Response(status=201)
 
 
 @asyncio.coroutine
