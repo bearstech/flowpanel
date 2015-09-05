@@ -11,7 +11,6 @@ USER_KEY = 'basic_auth_user'
 def auth_factory(app, handler):
     @asyncio.coroutine
     def middleware(request):
-        print(request.headers)
         if 'AUTHORIZATION' not in request.headers:
             return web.Response(
                 headers={'WWW-Authenticate': 'Basic realm="flowpanel"'},
