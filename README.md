@@ -21,6 +21,10 @@ Run the server
 
 The panel is here : http://localhost:8080/
 
+You can use the CLI client
+
+    ./bin/python client.py
+
 You can send events with HTTP
 
     curl -v -XPUT -d 'uhuhu' http://beuha:@localhost:8080/event/beuha
