@@ -1,5 +1,6 @@
 import asyncio
 import json
+from pathlib import Path
 
 import asyncio_redis
 from aiohttp import web, MsgType
@@ -8,10 +9,20 @@ from asyncio_redis.replies import PubSubReply
 
 from .auth import USER_KEY
 
+MIMES_EXTENSION = {
+    'html': 'text/html',
+    'js': 'application/javascript',
+    'css': 'text/css',
+}
+
 
 @asyncio.coroutine
-def home(request):
-    return web.Response(body=open('index.html', 'rb').read(), content_type="text/html")
+def static(request):
+    path = Path("static/%s" % request.match_info.get('file', 'index.html'))
+    if not path.exists():
+        raise web.HTTPNotFound()
+    return web.Response(body=path.open('rb').read(),
+                        content_type=MIMES_EXTENSION.get(path.suffix[1:]))
 
 
 @asyncio.coroutine
