@@ -11,7 +11,7 @@ Try it
 Install the dependencies with python 3.4.
 
     virtualenv -p python3.4 .
-    ./bin/pip install -r requierements.txt
+    ./bin/pip install -r requirements.txt
 
 Launch redis server
 
