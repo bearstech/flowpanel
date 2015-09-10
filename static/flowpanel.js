@@ -1,6 +1,6 @@
 $(function() {
 
-    var connection = new WebSocket('ws://localhost:8080/chaussette');
+    var connection = new WebSocket('ws://' + document.location.host + '/chaussette');
 
     // When the connection is open, send some data to the server
     connection.onopen = function () {
