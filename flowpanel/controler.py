@@ -30,8 +30,7 @@ def event(request):
     user = request.match_info['user']
     if not request.has_body:
         raise web.HTTPBadRequest
-    connection = yield from asyncio_redis.Connection.create(host='127.0.0.1',
-                                                            port=6379)
+    connection = request.app['redis']
     body = yield from request.content.read()
     yield from connection.publish('/events/%s' % user,
                                   str(body, encoding='utf-8'))
@@ -50,8 +49,7 @@ def websocket_handler(request):
     ws.start(request)
 
     ws.send_str("START")
-    connection = yield from asyncio_redis.Connection.create(host='127.0.0.1',
-                                                            port=6379)
+    connection = request.app['redis']
     pong = yield from connection.ping()
     assert pong.status == "PONG"
 
