@@ -39,6 +39,13 @@ def event(request):
 
 
 @asyncio.coroutine
+def loop_pubsub(subscriber, ws):
+    while True:
+        reply = yield from subscriber.next_published()
+        ws.send_str(json.dumps(dict(chan=reply.channel,
+                                    value=reply.value)))
+
+@asyncio.coroutine
 def websocket_handler(request):
     global USER_KEY
 
@@ -54,35 +61,30 @@ def websocket_handler(request):
     assert pong.status == "PONG"
 
     subscriber = yield from connection.start_subscribe()
-    chan = yield from subscriber.subscribe(['/events/%s' % request[USER_KEY], '/events'])
-    todos = set([ws.receive(), subscriber.next_published()])
-    while True:
-        done, todos = yield from asyncio.wait(todos, return_when=asyncio.FIRST_COMPLETED)
-        for task in done:
-            result = task.result()
-            if type(result) == Message:
-                msg = result
-                if msg.tp == MsgType.text:
-                    if msg.data == 'close':
-                        yield from ws.close()
-                        yield from connection.close()
-                    else:
-                        print('ws message', msg.data)
-                        ws.send_str(msg.data + '/answer')
-                elif msg.tp == MsgType.close:
-                    print('websocket connection closed')
-                    yield from connection.close()
-                elif msg.tp == MsgType.error:
-                    print('ws connection closed with exception %s',
-                        ws.exception())
-                todos.add(ws.receive())
-            elif type(result) == PubSubReply:
-                reply = result
-                print(reply)
-                ws.send_str(json.dumps(dict(chan=reply.channel,
-                                            value=reply.value)))
-                todos.add(subscriber.next_published())
-            else:
-                print("type unknown", type(result))
-    return ws
+    chan = yield from subscriber.subscribe(['/events/%s' % request[USER_KEY],
+                                            '/events'])
+    # detach subscribe loop
+    subscribe_task = asyncio.Task(loop_pubsub(subscriber, ws))
 
+    # loop websocket receive
+    while True:
+        try:
+            msg = yield from ws.receive()
+        except RuntimeError as e:
+            print(e)
+            return ws
+        if msg.tp == MsgType.text:
+            if msg.data == 'close':
+                yield from ws.close()
+                connection.close()
+            else:
+                print('ws message', msg.data)
+                ws.send_str(msg.data + '/answer')
+        elif msg.tp == MsgType.close:
+            print('websocket connection closed')
+            subscribe_task.cancel()
+        elif msg.tp == MsgType.error:
+            print('ws connection closed with exception %s',
+                ws.exception())
+
+    return ws
